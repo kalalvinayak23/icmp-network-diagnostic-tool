@@ -21,7 +21,7 @@ gcc icmp_diag.c -o icmp_diag
 sudo ./icmp_diag ping google.com > ping_output.txt
 sudo ./icmp_diag traceroute google.com > traceroute_output.txt
 
-Make sure ping_output.txt and traceroute_output.txt are present in the same folder as dashboard.html.
+3. Make sure ping_output.txt and traceroute_output.txt are present in the same folder as dashboard.html.
 
 4. Start server:
 python3 -m http.server 8000
