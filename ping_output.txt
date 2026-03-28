@@ -1,0 +1,10 @@
+
+PING google.com:
+Reply from 2404:6800:4007:804::200e: seq=0 rtt=11.18 ms
+Reply from 2404:6800:4007:804::200e: seq=1 rtt=82.73 ms
+Reply from 2404:6800:4007:804::200e: seq=2 rtt=12.62 ms
+Reply from 2404:6800:4007:804::200e: seq=3 rtt=14.59 ms
+
+--- google.com ping statistics ---
+4 packets transmitted, 4 received, 0.0% packet loss
+average rtt = 30.28 ms
