@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Network Diagnostics Dashboard</title>
+  <!-- Import Google Fonts for polished typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Import Chart.js for RTT visualisation -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Import Lottie player -->
+  <script src="https://cdn.lottiefiles.com/lottie-player.js"></script>
+  <style>
+    /*
+      Theme variables. These values define the premium dark palette and
+      accent colours used throughout the dashboard. Feel free to tweak
+      these to dial in a slightly different aesthetic.
+    */
+    /*
+      Base variables define default values which are overridden by theme
+      attributes. If no data-theme attribute is specified, these values
+      correspond to the Neon palette by default.
+    */
+    :root {
+      --bg-start: #0d0d0d;
+      --bg-mid:   #151515;
+      --bg-end:   #1c1c1c;
+      --card-bg:  rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --card-shadow: 0 6px 32px rgba(0, 0, 0, 0.65);
+      --primary: #00ff85;
+      --secondary: #1e90ff;
+      --accent-pink: #ff0099;
+      --success: #00ff85;
+      --error: #ff5f5f;
+      --text-primary: #e6e6e6;
+      --text-secondary: #a1a7b5;
+    }
+
+    /*
+      Theme palettes. Attach data-theme="neon", "jewel" or "warm" to the
+      <html> element to switch between colour schemes. These palettes are
+      inspired by popular dark‑mode guidelines: Neon (bright and high‑contrast)
+     【450239825621827†L175-L207】, Jewel (deep tones and saturated accents), and Warm (soft and cozy).
+    */
+    [data-theme="neon"] {
+      --bg-start: #0d0d0d;
+      --bg-mid:   #151515;
+      --bg-end:   #1c1c1c;
+      --card-bg:  rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --primary: #00ff85;
+      --secondary: #1e90ff;
+      --accent-pink: #ff0099;
+      --success: #00ff85;
+      --error: #ff5f5f;
+      --text-primary: #e6e6e6;
+      --text-secondary: #a1a7b5;
+    }
+    [data-theme="jewel"] {
+      --bg-start: #0e1324;
+      --bg-mid:   #1f2940;
+      --bg-end:   #152036;
+      --card-bg:  rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.14);
+      --primary: #00a6a6;    /* teal */
+      --secondary: #8e44ad;  /* purple */
+      --accent-pink: #f39c12; /* amber/gold used for highlights */
+      --success: #00b894;    /* jade */
+      --error: #e74c3c;      /* red */
+      --text-primary: #e5eaf3;
+      --text-secondary: #aab7d0;
+    }
+    [data-theme="warm"] {
+      --bg-start: #1c1c1c;
+      --bg-mid:   #2a2a2a;
+      --bg-end:   #3a2b2d;
+      --card-bg:  rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --primary: #ff6f61;    /* coral */
+      --secondary: #daa520;  /* goldenrod */
+      --accent-pink: #f5e8d8; /* warm beige for hovers */
+      --success: #f4b400;    /* golden success */
+      --error: #d9480f;      /* burnt orange */
+      --text-primary: #f5e8d8;
+      --text-secondary: #c4b7ae;
+    }
+
+    /* Base styling */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      background: linear-gradient(120deg, var(--bg-start), var(--bg-mid), var(--bg-end));
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Smooth fade and slide animation used for cards and hops */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hero section */
+    header.hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 60px 30px;
+      gap: 20px;
+    }
+    .hero-text h1 {
+      margin: 0 0 10px;
+      font-size: 2.5rem;
+      font-weight: 600;
+      animation: fadeSlideUp 1s ease forwards;
+    }
+    .hero-text p {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      animation: fadeSlideUp 1s ease 0.2s forwards;
+    }
+    .hero-animation {
+      width: 320px;
+      height: 320px;
+      flex: 0 0 320px;
+      animation: fadeSlideUp 1s ease 0.4s forwards;
+    }
+
+    /* Metric cards */
+    section.metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-around;
+      padding: 0 30px 30px;
+    }
+    .card {
+      position: relative;
+      flex: 1 1 240px;
+      min-width: 220px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--card-shadow);
+      padding: 20px;
+      overflow: hidden;
+      cursor: default;
+      animation: fadeSlideUp 0.8s ease forwards;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+    }
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    .card .value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .card .unit {
+      font-size: 0.9rem;
+      color: var(--secondary);
+      margin-left: 4px;
+    }
+    /* Status pulse indicator inside cards */
+    .status-chip {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: var(--text-primary);
+      padding: 4px 8px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    }
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulsing 2s infinite;
+    }
+    @keyframes pulsing {
+      0%, 100% { opacity: 0.8; box-shadow: 0 0 10px var(--success), 0 0 20px var(--success); }
+      50% { opacity: 1; box-shadow: 0 0 5px var(--success), 0 0 10px var(--success); }
+    }
+
+    /* Chart section */
+    section.chart-section {
+      margin: 0 30px 30px;
+      padding: 30px;
+      border-radius: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.8s ease forwards;
+    }
+    #rttChart {
+      width: 100% !important;
+      max-height: 300px;
+    }
+
+    /* Traceroute section */
+    section.traceroute-section {
+      margin: 0 30px 30px;
+      padding: 30px;
+      border-radius: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.8s ease forwards;
+    }
+    .traceroute-section h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .timeline {
+      position: relative;
+      margin-left: 20px;
+    }
+    .hop {
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .hop.show {
+      animation: fadeSlideUp 0.6s ease forwards;
+    }
+    .hop::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary), 0 0 16px var(--primary);
+    }
+    .hop::after {
+      content: '';
+      position: absolute;
+      left: 18px;
+      top: 20px;
+      width: 2px;
+      height: calc(100% - 20px);
+      background: var(--card-border);
+    }
+    .hop:last-child::after {
+      content: none;
+    }
+    .hop.timeout::before {
+      background: var(--error);
+      box-shadow: 0 0 8px var(--error), 0 0 16px var(--error);
+    }
+    .hop.destination::before {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success), 0 0 16px var(--success);
+    }
+    .hop-content {
+      display: flex;
+      flex-direction: column;
+    }
+    .hop-number {
+      font-size: 0.85rem;
+      color: var(--secondary);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .hop-host {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .hop-latency {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Observations */
+    section.observations {
+      margin: 0 30px 30px;
+      padding: 30px;
+      border-radius: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.8s ease forwards;
+    }
+    .observations h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .observations ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .observations li {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+    .observations li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+    }
+
+    /* Raw output */
+    section.raw-output {
+      margin: 0 30px 60px;
+      padding: 30px;
+      border-radius: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--card-shadow);
+      animation: fadeSlideUp 0.8s ease forwards;
+    }
+
+    /* Theme switcher styling */
+    .theme-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      padding: 6px 0;
+    }
+    .theme-switcher select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    .theme-switcher option {
+      color: var(--text-primary);
+      background: var(--bg-end);
+    }
+    @media (max-width: 768px) {
+      .theme-switcher {
+        margin-left: 0;
+        margin-top: 10px;
+      }
+    }
+    .raw-output h2 {
+      margin-top: 0;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tab-button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.05);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.3s, color 0.3s;
+    }
+    .tab-button.active {
+      background: var(--primary);
+      color: #0f0c29;
+    }
+    .tab-button:hover {
+      background: var(--accent-pink);
+      color: #fff;
+    }
+    .raw-panel {
+      display: none;
+      max-height: 400px;
+      overflow: auto;
+      background: #0d111b;
+      color: #a2b0d3;
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      font-family: 'Courier New', monospace;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .raw-panel.active {
+      display: block;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      header.hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .hero-animation {
+        width: 260px;
+        height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Hero section -->
+  <header class="hero">
+    <div class="hero-text">
+      <h1>Network Diagnostics Dashboard</h1>
+      <p>ICMP‑based network monitoring and traceroute visualisation</p>
+    </div>
+    <div class="hero-animation">
+      <!-- Lottie animation depicting network communication. This remote asset can be swapped later for a more specific animation. -->
+      <lottie-player src="https://assets8.lottiefiles.com/packages/lf20_hp09atmh.json" background="transparent" speed="1" loop autoplay></lottie-player>
+    </div>
+
+    <!-- Theme switcher: allows the user to toggle between colour palettes. -->
+    <div class="theme-switcher">
+      <label for="themeSelect" style="font-size: 0.9rem; margin-right: 6px; color: var(--text-secondary);">Theme:</label>
+      <select id="themeSelect" style="padding: 6px 8px; border-radius: 6px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary);">
+        <option value="neon">Neon</option>
+        <option value="jewel">Jewel</option>
+        <option value="warm">Warm</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Metric cards -->
+  <section class="metrics">
+    <div class="card" id="lossCard">
+      <div class="status-chip"><span class="pulse"></span><span id="lossStatus">--</span></div>
+      <h3>Packet Loss</h3>
+      <div class="value" id="lossValue">--</div>
+    </div>
+    <div class="card" id="minCard">
+      <div class="status-chip"><span class="pulse"></span><span>Min RTT</span></div>
+      <h3>Minimum RTT</h3>
+      <div class="value" id="minValue">--</div>
+    </div>
+    <div class="card" id="avgCard">
+      <div class="status-chip"><span class="pulse"></span><span>Avg RTT</span></div>
+      <h3>Average RTT</h3>
+      <div class="value" id="avgValue">--</div>
+    </div>
+    <div class="card" id="maxCard">
+      <div class="status-chip"><span class="pulse"></span><span>Max RTT</span></div>
+      <h3>Maximum RTT</h3>
+      <div class="value" id="maxValue">--</div>
+    </div>
+  </section>
+
+  <!-- RTT chart -->
+  <section class="chart-section">
+    <canvas id="rttChart"></canvas>
+  </section>
+
+  <!-- Traceroute visualisation -->
+  <section class="traceroute-section">
+    <h2>Traceroute</h2>
+    <div class="timeline" id="traceTimeline"></div>
+  </section>
+
+  <!-- Observations -->
+  <section class="observations">
+    <h2>Observations & Insights</h2>
+    <ul id="observationsList"></ul>
+  </section>
+
+  <!-- Raw output display -->
+  <section class="raw-output">
+    <h2>Raw Output</h2>
+    <div class="tabs">
+      <button class="tab-button active" data-target="pingRaw">Ping Output</button>
+      <button class="tab-button" data-target="traceRaw">Traceroute Output</button>
+    </div>
+    <pre id="pingRaw" class="raw-panel active"></pre>
+    <pre id="traceRaw" class="raw-panel"></pre>
+  </section>
+
+  <script>
+    // Helper to animate numbers from 0 to a target value over a duration.
+    function animateNumber(el, end, suffix = '', duration = 1000) {
+      const start = 0;
+      const startTime = performance.now();
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const value = start + (end - start) * progress;
+        el.textContent = suffix ? value.toFixed(1) + suffix : value.toFixed(1);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    // Parse ping output into structured metrics.
+    function parsePing(text) {
+      if (!text) return null;
+      const lines = text.trim().split(/\n/).filter(l => l.trim());
+      const result = {
+        host: '',
+        transmitted: 0,
+        received: 0,
+        lossPercent: 0,
+        times: [],
+        min: null,
+        avg: null,
+        max: null
+      };
+      // Host extraction
+      const firstLine = lines[0] || '';
+      const hostMatch = firstLine.match(/PING\s+([^\s(]+)/i);
+      if (hostMatch) result.host = hostMatch[1];
+      // Extract RTT times. Support both "time=" and "rtt=" indicators.
+      lines.forEach(line => {
+        const match = line.match(/\b(?:time|rtt)[<=>]?\s*([\d\.]+)\s*ms/i);
+        if (match) {
+          result.times.push(parseFloat(match[1]));
+        }
+      });
+      // Packet stats
+      const statsLine = lines.find(l => /packets\s+transmitted/i.test(l));
+      if (statsLine) {
+        // Support integer or decimal percentages (e.g. 0.0% packet loss)
+        const m = statsLine.match(/(\d+)\s+packets\s+transmitted,\s*(\d+)\s+(?:packets\s+)?received,.*?([\d\.]+)%\s+packet\s+loss/i);
+        if (m) {
+          result.transmitted = parseInt(m[1]);
+          result.received = parseInt(m[2]);
+          result.lossPercent = parseFloat(m[3]);
+        }
+      }
+      // RTT summary
+      const rttLine = lines.find(l => /(round-trip|rtt)\s+.*\s+=/i.test(l));
+      if (rttLine) {
+        // Match three RTT values (min/avg/max) even if a fourth (stddev) exists
+        const m = rttLine.match(/=\s*([\d\.]+)\/([\d\.]+)\/([\d\.]+)/);
+        if (m) {
+          result.min = parseFloat(m[1]);
+          result.avg = parseFloat(m[2]);
+          result.max = parseFloat(m[3]);
+        }
+      }
+      // Some ping implementations provide only an average line (e.g. "average rtt = 16.14 ms").
+      if (result.avg === null) {
+        const avgLine = lines.find(l => /average\s+rtt/i.test(l));
+        if (avgLine) {
+          const m = avgLine.match(/=\s*([\d\.]+)/);
+          if (m) {
+            result.avg = parseFloat(m[1]);
+          }
+        }
+      }
+      // If no summary, compute from individual RTT times if available
+      if (result.min === null && result.times.length) {
+        result.min = Math.min(...result.times);
+        result.max = Math.max(...result.times);
+        result.avg = result.times.reduce((a, b) => a + b, 0) / result.times.length;
+      }
+      return result;
+    }
+
+    // Parse traceroute output into hops array.
+    function parseTraceroute(text) {
+      if (!text) return [];
+      const lines = text.trim().split(/\n/).filter(l => l.trim());
+      const hops = [];
+      lines.forEach(line => {
+        const hopMatch = line.match(/^\s*(\d+)\s+(.*)/);
+        if (!hopMatch) return;
+        const hopNum = parseInt(hopMatch[1]);
+        const rest = hopMatch[2];
+        // Handle timeouts (*)
+        if (rest.trim().startsWith('*')) {
+          hops.push({ hop: hopNum, timeout: true });
+          return;
+        }
+        let host = '', ip = '', avg = null;
+        // Host and IP extraction
+        const hostIpMatch = rest.match(/([^\s]+)\s*(\([^\)]+\))?/);
+        if (hostIpMatch) {
+          host = hostIpMatch[1];
+          if (hostIpMatch[2]) {
+            ip = hostIpMatch[2].replace(/[()]/g, '');
+          }
+        }
+        // Times extraction
+        const timeMatches = rest.match(/([\d.]+)\s*ms/g);
+        if (timeMatches) {
+          const times = timeMatches.map(t => parseFloat(t));
+          if (times.length) {
+            avg = times.reduce((a, b) => a + b, 0) / times.length;
+          }
+        }
+        hops.push({ hop: hopNum, host, ip, avg });
+      });
+      return hops;
+    }
+
+    // Build the RTT line chart using Chart.js. Uses a gradient line and smooth tension.
+    function buildChart(times) {
+      const ctx = document.getElementById('rttChart').getContext('2d');
+      const labels = times.map((_, i) => `#${i + 1}`);
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      /*
+        Use the neon palette for the RTT chart: bright neon green fading
+        into electric blue. The opacity decreases towards the bottom for a
+        subtle glow effect.
+      */
+      gradient.addColorStop(0, 'rgba(0,255,133,0.8)');
+      gradient.addColorStop(1, 'rgba(30,144,255,0.1)');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'RTT (ms)',
+            data: times,
+            fill: true,
+            borderColor: 'rgba(0,255,133,1)',
+            borderWidth: 2,
+            backgroundColor: gradient,
+            tension: 0.4,
+            pointRadius: 3,
+            pointBackgroundColor: 'rgba(30,144,255,1)',
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              ticks: { color: varTextSecondary() },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            },
+            y: {
+              ticks: { color: varTextSecondary() },
+              grid: { color: 'rgba(255,255,255,0.05)' }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: varTextSecondary() }
+            },
+            tooltip: {
+              backgroundColor: '#1a202c',
+              titleColor: '#00d4ff',
+              bodyColor: '#e0e6ed',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1
+            }
+          },
+          animation: {
+            duration: 1200,
+            easing: 'easeOutQuart'
+          }
+        }
+      });
+    }
+    // Helper to return computed CSS variable for Chart.js ticks.
+    function varTextSecondary() {
+      return getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#8faac9';
+    }
+
+    // Render traceroute timeline. Each hop is animated with a delay.
+    function renderTimeline(hops) {
+      const container = document.getElementById('traceTimeline');
+      container.innerHTML = '';
+      hops.forEach((hop, index) => {
+        const hopEl = document.createElement('div');
+        hopEl.classList.add('hop');
+        if (hop.timeout) hopEl.classList.add('timeout');
+        if (index === hops.length - 1 && !hop.timeout) hopEl.classList.add('destination');
+        hopEl.style.animationDelay = `${index * 0.15}s`;
+        const content = document.createElement('div');
+        content.classList.add('hop-content');
+        const num = document.createElement('div');
+        num.classList.add('hop-number');
+        num.textContent = `Hop ${hop.hop}`;
+        const host = document.createElement('div');
+        host.classList.add('hop-host');
+        if (hop.timeout) {
+          host.textContent = '* * * (timeout)';
+        } else {
+          host.textContent = hop.host || hop.ip || 'unknown';
+        }
+        const lat = document.createElement('div');
+        lat.classList.add('hop-latency');
+        if (hop.avg) {
+          lat.textContent = `${hop.avg.toFixed(2)} ms`;
+        } else if (hop.timeout) {
+          lat.textContent = '';
+        } else {
+          lat.textContent = '—';
+        }
+        content.appendChild(num);
+        content.appendChild(host);
+        content.appendChild(lat);
+        hopEl.appendChild(content);
+        container.appendChild(hopEl);
+        // Delay showing each hop for smooth animation
+        setTimeout(() => hopEl.classList.add('show'), index * 150);
+      });
+    }
+
+    // Build observations list based on ping and traceroute data.
+    function buildObservations(ping, hops) {
+      const obsList = document.getElementById('observationsList');
+      obsList.innerHTML = '';
+      const observations = [];
+      if (!ping) {
+        // If ping data is missing, inform the user that the file could
+        // not be fetched. Suggest serving the dashboard via a local
+        // web server to bypass file:// restrictions in some browsers.
+        observations.push('Ping data could not be loaded.');
+        observations.push('If you opened this file directly, please serve it via a local HTTP server (e.g. python -m http.server) to allow reading ping_output.txt.');
+      } else {
+        observations.push(ping.lossPercent > 0
+          ? `${ping.lossPercent}% packet loss detected`
+          : 'No packet loss detected');
+        observations.push(`Average RTT: ${ping.avg.toFixed(2)} ms`);
+        observations.push(`Minimum RTT: ${ping.min.toFixed(2)} ms`);
+        observations.push(`Maximum RTT: ${ping.max.toFixed(2)} ms`);
+      }
+      if (!hops || hops.length === 0) {
+        // If no traceroute data, inform the user as above. This often
+        // happens when the traceroute_output.txt file cannot be fetched.
+        observations.push('Traceroute data could not be loaded.');
+        observations.push('If you opened this file directly, try serving it via a local HTTP server to allow reading traceroute_output.txt.');
+      } else {
+        const timeouts = hops.filter(h => h.timeout).length;
+        if (timeouts > 0) observations.push(`${timeouts} timeouts encountered during traceroute`);
+        const highLatency = hops.find(h => h.avg && h.avg > 150);
+        if (highLatency) observations.push(`High latency at hop ${highLatency.hop} (${highLatency.host || highLatency.ip || 'unknown'}) with ${highLatency.avg.toFixed(2)} ms`);
+        observations.push(`Total hops: ${hops.length}`);
+      }
+      observations.forEach(text => {
+        const li = document.createElement('li');
+        li.textContent = text;
+        obsList.appendChild(li);
+      });
+    }
+
+    // Tab switching logic for raw output panels.
+    function setupTabs() {
+      const buttons = document.querySelectorAll('.tab-button');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.getAttribute('data-target');
+          document.querySelectorAll('.raw-panel').forEach(panel => {
+            panel.classList.remove('active');
+            if (panel.id === target) panel.classList.add('active');
+          });
+        });
+      });
+    }
+
+    // Main loader: fetch ping and traceroute outputs, update UI accordingly.
+    async function loadData() {
+      let pingText = '';
+      let traceText = '';
+      /*
+        When the dashboard is opened directly via the file:// protocol,
+        relative fetches can silently fail due to the browser’s
+        same‑origin restrictions. To improve resilience, we compute
+        absolute URLs for the ping and traceroute files based off
+        of the current page URL. Using the URL constructor ensures that
+        the paths are resolved correctly relative to the current file.
+      */
+      try {
+        const baseUrl = new URL(window.location.href);
+        const pingUrl = new URL('ping_output.txt', baseUrl);
+        const resp = await fetch(pingUrl);
+        if (resp && resp.ok) {
+          pingText = await resp.text();
+        }
+      } catch (e) {
+        console.warn('Failed to load ping_output.txt:', e);
+      }
+      try {
+        const baseUrl2 = new URL(window.location.href);
+        const traceUrl = new URL('traceroute_output.txt', baseUrl2);
+        const resp2 = await fetch(traceUrl);
+        if (resp2 && resp2.ok) {
+          traceText = await resp2.text();
+        }
+      } catch (e) {
+        console.warn('Failed to load traceroute_output.txt:', e);
+      }
+      // Update raw panels
+      document.getElementById('pingRaw').textContent = pingText || 'No ping output available.';
+      document.getElementById('traceRaw').textContent = traceText || 'No traceroute output available.';
+      // Parse data
+      const pingData = parsePing(pingText);
+      const traceData = parseTraceroute(traceText);
+      // Update metrics
+      if (pingData) {
+        document.getElementById('lossStatus').textContent = pingData.lossPercent > 0 ? 'Loss' : 'OK';
+        // Animate loss percent if available
+        if (!isNaN(pingData.lossPercent)) {
+          animateNumber(document.getElementById('lossValue'), pingData.lossPercent, '%');
+        } else {
+          document.getElementById('lossValue').textContent = '--';
+        }
+        // Animate RTT metrics only if they were parsed. Otherwise show placeholders.
+        if (pingData.min !== null && !isNaN(pingData.min)) {
+          animateNumber(document.getElementById('minValue'), pingData.min, ' ms');
+        } else {
+          document.getElementById('minValue').textContent = '--';
+        }
+        if (pingData.avg !== null && !isNaN(pingData.avg)) {
+          animateNumber(document.getElementById('avgValue'), pingData.avg, ' ms');
+        } else {
+          document.getElementById('avgValue').textContent = '--';
+        }
+        if (pingData.max !== null && !isNaN(pingData.max)) {
+          animateNumber(document.getElementById('maxValue'), pingData.max, ' ms');
+        } else {
+          document.getElementById('maxValue').textContent = '--';
+        }
+        // Chart: only build if there are RTT samples
+        if (pingData.times && pingData.times.length) {
+          buildChart(pingData.times);
+        }
+      } else {
+        // If ping parse fails entirely, show placeholders
+        document.getElementById('lossStatus').textContent = '--';
+        document.getElementById('lossValue').textContent = '--';
+        document.getElementById('minValue').textContent = '--';
+        document.getElementById('avgValue').textContent = '--';
+        document.getElementById('maxValue').textContent = '--';
+      }
+      // Render traceroute timeline
+      renderTimeline(traceData);
+      // Observations
+      buildObservations(pingData, traceData);
+    }
+
+    // Initialise page when DOM loaded.
+    document.addEventListener('DOMContentLoaded', () => {
+      setupTabs();
+      loadData();
+
+      // Theme selector: load saved theme or default to neon, and update on change
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) {
+        const saved = localStorage.getItem('dashboardTheme') || 'neon';
+        document.documentElement.setAttribute('data-theme', saved);
+        themeSelect.value = saved;
+        themeSelect.addEventListener('change', () => {
+          const val = themeSelect.value;
+          document.documentElement.setAttribute('data-theme', val);
+          localStorage.setItem('dashboardTheme', val);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
