@@ -1,4 +1,6 @@
-https://github.com/kalalvinayak23/icmp-network-diagnostic-tool
+# ICMP Network Diagnostic Tool
+
+🔗 [View Repository](https://github.com/kalalvinayak23/icmp-network-diagnostic-tool)
 
 ## Name :- Vinayak yuvraj kalal
 ## SRN :-  PES2UG25AM809
