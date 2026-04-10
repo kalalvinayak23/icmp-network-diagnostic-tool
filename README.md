@@ -1,12 +1,15 @@
 # ICMP Network Diagnostic Tool
 
 🔗 [View Repository](https://github.com/kalalvinayak23/icmp-network-diagnostic-tool)
+---
 
 ## Name :- Vinayak yuvraj kalal
 ## SRN :-  PES2UG25AM809
+---
 
 ## Name :- Sabbir Mondal
 ## SRN :- PES2UG24AM141
+---
 
 ## Name :-  Samvit nandkishore
 ## SRN :- PES2UG24AM144
