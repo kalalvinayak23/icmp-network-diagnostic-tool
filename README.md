@@ -59,6 +59,7 @@ gcc icmp_diag.c -o icmp_diag
 ### 2. Generate output files
 
  sudo ./icmp_diag ping google.com > ping_output.txt
+ 
  sudo ./icmp_diag traceroute google.com > traceroute_output.txt
 
 ### 3. Make sure  the following files are in the same folder
