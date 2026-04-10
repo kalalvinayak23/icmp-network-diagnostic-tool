@@ -1,8 +1,20 @@
-# ICMP Network Diagnostic Tool
+Name :- Vinayak yuvraj kalal
+SRN :-  PES2UG25AM809
 
-## Overview
+Name :- Sabbir Mondal
+SRN :- PES2UG24AM141
 
-This project is a network diagnostic utility developed in C using ICMP. It performs ping and traceroute operations to analyze network performance. A dashboard is included to visualize the output in a clear and user-friendly way.
+Name :-  Samvit nandkishore
+SRN :- PES2UG24AM144
+
+# Title: ICMP-Based Network Diagnostic Suite with Ping and Traceroute
+
+## Abstract
+
+This mini-project is about creating a simple network diagnostic tool using Internet Control Message Protocol (ICMP). 
+
+The main idea is to create a tool that combines Ping and Traceroute to test the performance of a network by sending ICMP packets to a
+destination. It uses raw ICMP sockets to send Echo Request and Echo Reply packets, which allow users to measure the Round Trip Time (RTT) and trace the route that packets take to reach a destination.
 
 ---
 
@@ -66,6 +78,18 @@ http://localhost:8000/dashboard.html
 ---
 
 ## Dashboard Output
+
+<img width="1440" height="736" alt="image" src="https://github.com/user-attachments/assets/d5b8f640-f9b6-4b76-acf2-00d52ca56759" />
+
+<img width="1440" height="773" alt="image" src="https://github.com/user-attachments/assets/46dcd5cb-ec77-4e69-a34a-13335c8a6527" />
+
+<img width="1425" height="252" alt="image" src="https://github.com/user-attachments/assets/520da9b7-b863-436b-929f-3ceb9f89255e" />
+
+<img width="1425" height="343" alt="image" src="https://github.com/user-attachments/assets/1c3799e5-4210-49c3-b31f-df0df4fd98d4" />
+
+<img width="1425" height="343" alt="image" src="https://github.com/user-attachments/assets/ff4eef10-c4bc-4b88-8e08-6708f35688dc" />
+
+
 
 The dashboard displays:
 
