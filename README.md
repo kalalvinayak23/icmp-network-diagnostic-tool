@@ -54,16 +54,20 @@ The program is implemented in C using raw sockets to create and send ICMP packet
 
 ### 1. Compile the program
 
+gcc icmp_diag.c -o icmp_diag
+
 ```bash 
-   gcc icmp_diag.c -o icmp_diag 
+
 
 ### 2. Generate output files
 
  ```bash
     sudo ./icmp_diag ping google.com > ping_output.txt
- 
+ ```bash 
+
   ```bash
      sudo ./icmp_diag traceroute google.com > traceroute_output.txt
+```bash 
 
 ### 3. Make sure  the following files are in the same folder
 
