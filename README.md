@@ -54,13 +54,13 @@ The program is implemented in C using raw sockets to create and send ICMP packet
 
 ### 1. Compile the program
 
-```bash gcc icmp_diag.c -o icmp_diag ```bash
+```bash gcc icmp_diag.c -o icmp_diag 
 
 ### 2. Generate output files
 
- ```bash sudo ./icmp_diag ping google.com > ping_output.txt ```bash
+ ```bash sudo ./icmp_diag ping google.com > ping_output.txt
  
- ```bash sudo ./icmp_diag traceroute google.com > traceroute_output.txt ```bash
+    sudo ./icmp_diag traceroute google.com > traceroute_output.txt 
 
 ### 3. Make sure  the following files are in the same folder
 
@@ -72,11 +72,11 @@ The program is implemented in C using raw sockets to create and send ICMP packet
 
 ### 4. Start the local server
 
-```bash python3 -m http.server 8000 ```bash
+```bash python3 -m http.server 8000
 
 ### 5. Open the dashboard
 
-```bash http://localhost:8000/dashboard.html ```bash
+```bash http://localhost:8000/dashboard.html 
 
 ---
 
