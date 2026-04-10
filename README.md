@@ -56,9 +56,6 @@ The program is implemented in C using raw sockets to create and send ICMP packet
 
 gcc icmp_diag.c -o icmp_diag
 
-```bash 
-
-
 ### 2. Generate output files
 
  ```bash
