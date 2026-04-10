@@ -7,14 +7,7 @@
 ## Name :-  Samvit nandkishore
 ## SRN :- PES2UG24AM144
 
-
-
-
-
-
-
-
-
+---
 
 # Title: ICMP-Based Network Diagnostic Suite with Ping and Traceroute
 
